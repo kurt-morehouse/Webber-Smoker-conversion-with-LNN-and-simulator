@@ -1,0 +1,2 @@
+timestamp_utc,probe_name,probe_address,rssi_dbm,food_temperature_c,food_temperature_f,ambient_temperature_c,ambient_temperature_f,tip_1_temperature_c,tip_1_temperature_f,tip_2_temperature_c,tip_2_temperature_f,tip_3_temperature_c,tip_3_temperature_f,tip_4_temperature_c,tip_4_temperature_f,battery_percent
+2026-08-27T01:17:28.013233+00:00,warm water,902B6F7B-D0F4-EC70-1C01-8D7DE6A68397,-65,31.3,88.34,28.8,83.84,31.3,88.34,32.6,90.68,33.0,91.4,32.6,90.68,

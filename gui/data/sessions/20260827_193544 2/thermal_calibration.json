@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-08-28T12:24:36.102790+00:00",
+  "source_session": "data/sessions/20260827_193544 2",
+  "source_probe": "inside in water 2",
+  "source_channel": "food_temperature_f",
+  "heater_power_w": 1100.0,
+  "outside_temperature_f": 75.0,
+  "initial_temperature_f": 87.44,
+  "equilibrium_temperature_f": 230.186252950224,
+  "time_constant_seconds": 7148.423998047062,
+  "fit_r_squared": 0.9969722290084975,
+  "heat_loss_coefficient_w_per_f": 7.088256717899008,
+  "effective_thermal_capacitance_j_per_f": 50669.864426547574,
+  "heat_loss_coefficient_w_per_k": 12.758862092218214,
+  "effective_thermal_capacitance_j_per_k": 91205.75596778563
+}

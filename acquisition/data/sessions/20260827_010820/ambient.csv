@@ -1,0 +1,4 @@
+timestamp_utc,probe_name,probe_address,rssi_dbm,food_temperature_c,food_temperature_f,ambient_temperature_c,ambient_temperature_f,tip_1_temperature_c,tip_1_temperature_f,tip_2_temperature_c,tip_2_temperature_f,tip_3_temperature_c,tip_3_temperature_f,tip_4_temperature_c,tip_4_temperature_f,battery_percent
+2026-08-27T01:08:23.028790+00:00,ambient,2551D2CE-42AA-68FB-434E-C7BD2ABBF5E3,-72,,,,,,,,,,,,,
+2026-08-27T01:08:25.032456+00:00,ambient,2551D2CE-42AA-68FB-434E-C7BD2ABBF5E3,-64,,,,,,,,,,,,,100.0
+2026-08-27T01:08:27.036852+00:00,ambient,2551D2CE-42AA-68FB-434E-C7BD2ABBF5E3,-64,,,,,,,,,,,,,100.0
