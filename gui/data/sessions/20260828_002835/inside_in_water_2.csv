@@ -1,8 +1,0 @@
-timestamp_utc,probe_name,probe_address,rssi_dbm,food_temperature_c,food_temperature_f,ambient_temperature_c,ambient_temperature_f,tip_1_temperature_c,tip_1_temperature_f,tip_2_temperature_c,tip_2_temperature_f,tip_3_temperature_c,tip_3_temperature_f,tip_4_temperature_c,tip_4_temperature_f,battery_percent
-2026-08-28T00:28:37.671637+00:00,inside in water 2,2551D2CE-42AA-68FB-434E-C7BD2ABBF5E3,-77,,,,,,,,,,,,,87.0
-2026-08-28T00:28:39.675651+00:00,inside in water 2,2551D2CE-42AA-68FB-434E-C7BD2ABBF5E3,-75,22.4,72.32,21.9,71.42,22.4,72.32,22.5,72.5,22.6,72.68,22.4,72.32,87.0
-2026-08-28T00:28:41.684445+00:00,inside in water 2,2551D2CE-42AA-68FB-434E-C7BD2ABBF5E3,-75,22.4,72.32,21.9,71.42,22.4,72.32,22.5,72.5,22.6,72.68,22.4,72.32,87.0
-2026-08-28T00:28:43.693247+00:00,inside in water 2,2551D2CE-42AA-68FB-434E-C7BD2ABBF5E3,-75,22.4,72.32,21.9,71.42,22.4,72.32,22.5,72.5,22.6,72.68,22.4,72.32,87.0
-2026-08-28T00:28:45.700658+00:00,inside in water 2,2551D2CE-42AA-68FB-434E-C7BD2ABBF5E3,-87,22.4,72.32,22.1,71.78,22.4,72.32,22.5,72.5,22.5,72.5,22.4,72.32,87.0
-2026-08-28T00:28:47.708602+00:00,inside in water 2,2551D2CE-42AA-68FB-434E-C7BD2ABBF5E3,-75,22.4,72.32,22.0,71.6,22.4,72.32,22.5,72.5,22.5,72.5,22.4,72.32,87.0
-2026-08-28T00:28:49.713562+00:00,inside in water 2,2551D2CE-42AA-68FB-434E-C7BD2ABBF5E3,-75,22.4,72.32,22.0,71.6,22.4,72.32,22.5,72.5,22.5,72.5,22.4,72.32,87.0

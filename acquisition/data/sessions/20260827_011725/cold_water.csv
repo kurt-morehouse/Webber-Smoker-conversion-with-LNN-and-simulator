@@ -1,2 +1,0 @@
-timestamp_utc,probe_name,probe_address,rssi_dbm,food_temperature_c,food_temperature_f,ambient_temperature_c,ambient_temperature_f,tip_1_temperature_c,tip_1_temperature_f,tip_2_temperature_c,tip_2_temperature_f,tip_3_temperature_c,tip_3_temperature_f,tip_4_temperature_c,tip_4_temperature_f,battery_percent
-2026-08-27T01:17:28.011436+00:00,cold water,4CB13989-424F-31F7-E5C6-3C2FD749BFBE,-73,,,,,,,,,,,,,99.0

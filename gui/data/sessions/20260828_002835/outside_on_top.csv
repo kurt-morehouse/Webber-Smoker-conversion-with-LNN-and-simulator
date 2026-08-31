@@ -1,8 +1,0 @@
-timestamp_utc,probe_name,probe_address,rssi_dbm,food_temperature_c,food_temperature_f,ambient_temperature_c,ambient_temperature_f,tip_1_temperature_c,tip_1_temperature_f,tip_2_temperature_c,tip_2_temperature_f,tip_3_temperature_c,tip_3_temperature_f,tip_4_temperature_c,tip_4_temperature_f,battery_percent
-2026-08-28T00:28:37.673506+00:00,outside on top,902B6F7B-D0F4-EC70-1C01-8D7DE6A68397,-71,,,,,,,,,,,,,96.0
-2026-08-28T00:28:39.680864+00:00,outside on top,902B6F7B-D0F4-EC70-1C01-8D7DE6A68397,-88,22.5,72.5,22.1,71.78,22.5,72.5,22.6,72.68,22.5,72.5,22.6,72.68,96.0
-2026-08-28T00:28:41.689593+00:00,outside on top,902B6F7B-D0F4-EC70-1C01-8D7DE6A68397,-88,22.5,72.5,22.1,71.78,22.5,72.5,22.6,72.68,22.5,72.5,22.6,72.68,96.0
-2026-08-28T00:28:43.697858+00:00,outside on top,902B6F7B-D0F4-EC70-1C01-8D7DE6A68397,-88,22.5,72.5,22.1,71.78,22.5,72.5,22.6,72.68,22.5,72.5,22.6,72.68,96.0
-2026-08-28T00:28:45.706209+00:00,outside on top,902B6F7B-D0F4-EC70-1C01-8D7DE6A68397,-70,22.5,72.5,22.1,71.78,22.5,72.5,22.6,72.68,22.5,72.5,22.6,72.68,96.0
-2026-08-28T00:28:47.711149+00:00,outside on top,902B6F7B-D0F4-EC70-1C01-8D7DE6A68397,-70,22.5,72.5,22.1,71.78,22.5,72.5,22.6,72.68,22.5,72.5,22.6,72.68,96.0
-2026-08-28T00:28:49.717332+00:00,outside on top,902B6F7B-D0F4-EC70-1C01-8D7DE6A68397,-76,22.5,72.5,22.4,72.32,22.5,72.5,22.6,72.68,22.5,72.5,22.6,72.68,96.0
