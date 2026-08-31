@@ -934,3 +934,4 @@ Validation
 The objective is not simply to switch an electric heating element based on a temperature threshold.
 
 The goal is to develop a system that understands enough of the Weber's thermal behavior to **measure, predict, and intelligently control the cooking environment**.# Webber-Smoker-conversion-with-LNN-and-simulator
+# Webber-Smoker-conversion-with-LNN-and-simulator
