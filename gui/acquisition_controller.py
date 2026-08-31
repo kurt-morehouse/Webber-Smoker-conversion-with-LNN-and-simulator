@@ -163,8 +163,9 @@ class AcquisitionWorker(QObject):
         # -------------------------------------------------
 
         scanner = ChefIqScanner(
-            config=acquisition_config,
-            probe_service=probe_service,
+            config,
+            probe_service,
+            raw_packet_directory=session.directory,
         )
 
         self.status.emit(
