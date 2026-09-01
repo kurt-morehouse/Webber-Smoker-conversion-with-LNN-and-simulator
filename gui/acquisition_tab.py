@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 
 from PySide6.QtWidgets import (
     QGridLayout,
@@ -174,6 +175,10 @@ class AcquisitionTab(QWidget):
             self._acquisition_error
         )
 
+        self._state.session_changed.connect(
+            self._selected_session_changed
+        )
+
         # -------------------------------------------------
         # Button layout
         # -------------------------------------------------
@@ -249,16 +254,31 @@ class AcquisitionTab(QWidget):
         self,
     ) -> None:
 
-        session_root = (
-            self._state
-            .session_store
-            .root
+        session = (
+            self._state.selected_session
         )
 
-        session_root.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        if session is None:
+            self._status.setText(
+                "Create or select an experiment before starting acquisition."
+            )
+            self._diagnostic_log.append(
+                "No prepared session selected."
+            )
+            return
+
+        session = Path(session)
+
+        if not (
+            session / "manifest.json"
+        ).is_file():
+            self._status.setText(
+                "Selected experiment has no manifest.json."
+            )
+            self._diagnostic_log.append(
+                f"Invalid prepared session: {session}"
+            )
+            return
 
         self._probe_output.clear()
         self._diagnostic_log.clear()
@@ -272,7 +292,7 @@ class AcquisitionTab(QWidget):
         )
 
         self._session.setText(
-            "Session: ---"
+            f"Session: {session.name}"
         )
 
         self._start_button.setEnabled(
@@ -284,7 +304,7 @@ class AcquisitionTab(QWidget):
         )
 
         self._controller.start(
-            session_root
+            session
         )
 
     def _stop(
@@ -462,6 +482,24 @@ class AcquisitionTab(QWidget):
             False
         )
 
+    def _selected_session_changed(
+        self,
+        session_path,
+    ) -> None:
+        if self._controller.running:
+            return
+
+        if session_path is None:
+            self._session.setText(
+                "Session: ---"
+            )
+        else:
+            self._session.setText(
+                f"Prepared session: {Path(session_path).name}"
+            )
+
+        self._synchronize_ui()
+
     # =====================================================
     # Initial synchronization
     # =====================================================
@@ -475,7 +513,11 @@ class AcquisitionTab(QWidget):
         )
 
         self._start_button.setEnabled(
-            not running
+            (
+                not running
+                and self._state.selected_session
+                is not None
+            )
         )
 
         self._stop_button.setEnabled(

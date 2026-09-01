@@ -3,14 +3,6 @@ from pathlib import Path
 
 
 # ---------------------------------------------------------------------------
-# Chef iQ BLE protocol
-# ---------------------------------------------------------------------------
-
-CHEFIQ_MANUFACTURER_ID: int = 0x05CD
-CHEFIQ_MAX_PROBE_PACKET_LENGTH_BYTES: int = 18
-
-
-# ---------------------------------------------------------------------------
 # Timing
 # ---------------------------------------------------------------------------
 
@@ -65,8 +57,11 @@ PROBES: tuple[ProbeDefinition, ...] = (
 
 @dataclass(frozen=True)
 class AppConfig:
-    manufacturer_id: int = CHEFIQ_MANUFACTURER_ID
-    max_probe_packet_length_bytes: int = CHEFIQ_MAX_PROBE_PACKET_LENGTH_BYTES
+    """
+    Application configuration only.
+
+    CHEF iQ wire-protocol identifiers deliberately do not live here.
+    """
 
     display_interval_seconds: float = DISPLAY_INTERVAL_SECONDS
     record_interval_seconds: float = RECORD_INTERVAL_SECONDS

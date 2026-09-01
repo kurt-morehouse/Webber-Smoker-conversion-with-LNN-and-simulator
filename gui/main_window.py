@@ -1,8 +1,15 @@
+from dataclasses import replace
+
 from PySide6.QtWidgets import (
     QMainWindow,
+    QMessageBox,
+    QPushButton,
     QTabWidget,
+    QToolBar,
 )
 
+from acquisition.config import CONFIG
+from acquisition.session import SessionManager
 from gui.app_state import AppState
 from gui.acquisition_controller import AcquisitionController
 from gui.acquisition_tab import AcquisitionTab
@@ -31,21 +38,38 @@ class MainWindow(QMainWindow):
             WINDOW_HEIGHT,
         )
 
-        # -------------------------------------------------
-        # Shared application state
-        # -------------------------------------------------
-
         self._state = AppState()
-
-        # -------------------------------------------------
-        # Application-level acquisition service
-        #
-        # This owns the QThread and BLE acquisition worker.
-        # It remains alive regardless of which tab is open.
-        # -------------------------------------------------
 
         self._acquisition_controller = (
             AcquisitionController()
+        )
+
+        # -------------------------------------------------
+        # Main experiment workflow toolbar
+        # -------------------------------------------------
+
+        workflow_toolbar = QToolBar(
+            "Experiment Workflow",
+            self,
+        )
+        workflow_toolbar.setMovable(False)
+
+        self._new_session_button = QPushButton(
+            "New Session"
+        )
+        self._new_session_button.setToolTip(
+            "Create the experiment before acquisition so setup "
+            "can be documented in the Engineering Notebook."
+        )
+        self._new_session_button.clicked.connect(
+            self._create_new_session
+        )
+
+        workflow_toolbar.addWidget(
+            self._new_session_button
+        )
+        self.addToolBar(
+            workflow_toolbar
         )
 
         # -------------------------------------------------
@@ -58,8 +82,7 @@ class MainWindow(QMainWindow):
             app_state=self._state,
             acquisition_controller=
                 self._acquisition_controller
-            )
-
+        )
 
         self._sessions_tab = SessionsTab(
             app_state=self._state,
@@ -81,22 +104,18 @@ class MainWindow(QMainWindow):
             self._acquisition_tab,
             "Acquisition",
         )
-
         self._tabs.addTab(
             self._sessions_tab,
             "Sessions",
         )
-
         self._tabs.addTab(
             self._simulator_tab,
             "Simulator",
         )
-
         self._tabs.addTab(
             self._predictions_tab,
             "Predictions",
         )
-
         self._tabs.addTab(
             self._notebook_tab,
             "Engineering Notebook",
@@ -106,24 +125,83 @@ class MainWindow(QMainWindow):
             self._tabs
         )
 
-        # -------------------------------------------------
-        # Acquisition events feed shared application state.
-        # -------------------------------------------------
-
         self._acquisition_controller.acquisition_started.connect(
             self._acquisition_started
         )
-
         self._acquisition_controller.acquisition_stopped.connect(
             self._acquisition_stopped
         )
-
         self._acquisition_controller.probe_states.connect(
             self._probe_states_changed
         )
-
         self._acquisition_controller.error.connect(
             self._acquisition_error
+        )
+
+        self._state.acquisition_state_changed.connect(
+            lambda running:
+            self._new_session_button.setEnabled(
+                not running
+            )
+        )
+
+    def _create_new_session(
+        self,
+    ) -> None:
+        if self._acquisition_controller.running:
+            QMessageBox.warning(
+                self,
+                "Acquisition running",
+                "Stop acquisition before creating another experiment.",
+            )
+            return
+
+        root = (
+            self._state
+            .session_store
+            .root
+        )
+        root.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        config = replace(
+            CONFIG,
+            sessions_directory=root,
+        )
+
+        manager = SessionManager(
+            config
+        )
+
+        try:
+            session = manager.create_prepared_session(
+                config.probes
+            )
+        except Exception as exc:
+            QMessageBox.critical(
+                self,
+                "New session failed",
+                f"{type(exc).__name__}: {exc}",
+            )
+            return
+
+        # Make the prepared experiment visible everywhere immediately.
+        self._state.refresh_sessions()
+        self._state.set_selected_session(
+            session.directory
+        )
+
+        # Go straight to the notebook: define the experiment first.
+        self._tabs.setCurrentWidget(
+            self._notebook_tab
+        )
+
+        self.statusBar().showMessage(
+            f"Prepared experiment {session.session_id}. "
+            "Document setup, then start acquisition.",
+            10000,
         )
 
     # =====================================================
@@ -134,36 +212,28 @@ class MainWindow(QMainWindow):
         self,
         session_path,
     ) -> None:
-
         self._state.set_active_session(
             session_path
         )
-
         self._state.set_acquisition_running(
             True
         )
-
-        # Immediately make the new session visible.
+        self._state.set_selected_session(
+            session_path
+        )
         self._state.refresh_sessions()
 
     def _acquisition_stopped(
         self,
         session_path,
     ) -> None:
-
         self._state.set_acquisition_running(
             False
         )
-
         self._state.set_active_session(
             None
         )
-
-        # Refresh the experiment list because the
-        # manifest has now been completed.
         self._state.refresh_sessions()
-
-        # Make the completed experiment the selected one.
         self._state.set_selected_session(
             session_path
         )
@@ -172,7 +242,6 @@ class MainWindow(QMainWindow):
         self,
         readings,
     ) -> None:
-
         self._state.set_live_probes(
             readings
         )
@@ -181,7 +250,6 @@ class MainWindow(QMainWindow):
         self,
         message: str,
     ) -> None:
-
         print(
             "Acquisition error:",
             message,

@@ -26,6 +26,7 @@ from core.engineering_state import (
 
 from core.experiment_manifest import (
     complete_manifest,
+    load_manifest,
 )
 
 
@@ -33,86 +34,64 @@ class AcquisitionWorker(QObject):
     """
     Performs BLE acquisition in a background QThread.
 
-    The worker owns its own asyncio event loop through asyncio.run().
+    Acquisition attaches to an experiment/session that already exists.
+    It never creates a second session behind the GUI's back.
     """
 
     started = Signal(object)
     stopped = Signal(object)
-
     probe_states = Signal(object)
-
     status = Signal(str)
     error = Signal(str)
-
     finished = Signal()
 
     def __init__(
         self,
-        session_root: Path,
+        session_directory: Path,
     ) -> None:
-
         super().__init__()
 
-        self._session_root = session_root
+        self._session_directory = Path(
+            session_directory
+        )
         self._stop_event = threading.Event()
 
     def request_stop(self) -> None:
-        """
-        Request a graceful stop.
-
-        The acquisition loop checks this event once per
-        recording interval.
-        """
-
         self._stop_event.set()
 
     @Slot()
     def run(self) -> None:
-        """
-        Entry point executed by the QThread.
-        """
-
         try:
-
             asyncio.run(
                 self._run_async()
             )
-
         except Exception as exc:
-
             traceback.print_exc()
-
             self.error.emit(
                 f"{type(exc).__name__}: {exc}"
             )
-
         finally:
-
             self.finished.emit()
 
     async def _run_async(
         self,
     ) -> None:
-        """
-        Main asynchronous acquisition loop.
-        """
-
         self.status.emit(
             "Acquisition worker started"
         )
 
+        session_root = (
+            self._session_directory.parent
+        )
+
         acquisition_config = replace(
             CONFIG,
-            sessions_directory=self._session_root,
+            sessions_directory=session_root,
         )
 
         self.status.emit(
             "Acquisition configuration loaded"
         )
-
-        # -------------------------------------------------
-        # Build acquisition services
-        # -------------------------------------------------
 
         registry = ProbeRegistry(
             acquisition_config.probes
@@ -127,27 +106,23 @@ class AcquisitionWorker(QObject):
         )
 
         # -------------------------------------------------
-        # Create experiment/session
+        # Attach to the prepared experiment.
         # -------------------------------------------------
 
-        session = (
-            session_manager.create_session()
+        session = session_manager.open_session(
+            self._session_directory
+        )
+
+        # Validate manifest structure, but do not require CSV files yet:
+        # acquisition is about to create them.
+        load_manifest(
+            session.directory,
+            validate_files=False,
         )
 
         self.status.emit(
-            f"Session created: "
+            f"Using prepared session: "
             f"{session.directory.name}"
-        )
-
-        session_manager.create_manifest(
-            session=session,
-            probe_definitions=(
-                acquisition_config.probes
-            ),
-        )
-
-        self.status.emit(
-            "Experiment manifest created"
         )
 
         recorder = SessionRecorder(
@@ -158,12 +133,8 @@ class AcquisitionWorker(QObject):
             "Session recorder created"
         )
 
-        # -------------------------------------------------
-        # BLE scanner
-        # -------------------------------------------------
-
         scanner = ChefIqScanner(
-            config,
+            acquisition_config,
             probe_service,
             raw_packet_directory=session.directory,
         )
@@ -178,8 +149,6 @@ class AcquisitionWorker(QObject):
             "BLE scanner started"
         )
 
-        # Only report acquisition started after BLE
-        # scanning has successfully started.
         self.started.emit(
             session.directory
         )
@@ -187,14 +156,8 @@ class AcquisitionWorker(QObject):
         sample_cycle = 0
         first_probe_seen = False
 
-        # -------------------------------------------------
-        # Recording loop
-        # -------------------------------------------------
-
         try:
-
             while not self._stop_event.is_set():
-
                 await asyncio.sleep(
                     acquisition_config
                     .record_interval_seconds
@@ -218,32 +181,23 @@ class AcquisitionWorker(QObject):
                     probe_count > 0
                     and not first_probe_seen
                 ):
-
                     first_probe_seen = True
-
                     self.status.emit(
                         "First probe state received"
                     )
 
-                # Record one row for each currently
-                # known probe.
                 for state in states:
-
                     recorder.record(
                         state
                     )
 
                 if states:
-
                     sample_cycle += 1
-
                     self.status.emit(
                         f"Recorded sample cycle "
                         f"{sample_cycle}"
                     )
 
-                # Publish current readings to the GUI /
-                # shared engineering state.
                 readings = tuple(
                     self._to_live_reading(
                         state
@@ -256,11 +210,6 @@ class AcquisitionWorker(QObject):
                 )
 
         finally:
-
-            # -------------------------------------------------
-            # Graceful shutdown
-            # -------------------------------------------------
-
             self.status.emit(
                 "Stopping BLE scanner"
             )
@@ -291,73 +240,47 @@ class AcquisitionWorker(QObject):
     def _to_live_reading(
         state,
     ) -> LiveProbeReading:
-        """
-        Convert acquisition ProbeState into the shared
-        engineering-state representation.
-        """
-
         return LiveProbeReading(
             address=state.address,
-
             friendly_name=(
                 state.friendly_name
             ),
-
             food_temperature_c=(
                 state.food_temperature_c
             ),
-
             ambient_temperature_c=(
                 state.ambient_temperature_c
             ),
-
             tip_1_temperature_c=(
                 state.tip_1_temperature_c
             ),
-
             tip_2_temperature_c=(
                 state.tip_2_temperature_c
             ),
-
             tip_3_temperature_c=(
                 state.tip_3_temperature_c
             ),
-
             tip_4_temperature_c=(
                 state.tip_4_temperature_c
             ),
-
             battery_percent=(
                 state.battery_percent
             ),
-
             rssi=state.rssi,
-
             timestamp_utc=utc_now(),
         )
 
 
 class AcquisitionController(QObject):
-    """
-    Application-level controller for the acquisition worker.
-
-    The controller lives in the GUI thread.
-
-    The AcquisitionWorker lives in a background QThread.
-    """
-
     acquisition_started = Signal(object)
     acquisition_stopped = Signal(object)
-
     probe_states = Signal(object)
-
     status = Signal(str)
     error = Signal(str)
 
     def __init__(
         self,
     ) -> None:
-
         super().__init__()
 
         self._thread: QThread | None = None
@@ -365,11 +288,6 @@ class AcquisitionController(QObject):
 
     @property
     def running(self) -> bool:
-        """
-        True while the background acquisition thread exists
-        and is running.
-        """
-
         return (
             self._thread is not None
             and self._thread.isRunning()
@@ -377,111 +295,88 @@ class AcquisitionController(QObject):
 
     def start(
         self,
-        session_root: Path,
+        session_directory: Path,
     ) -> None:
         """
-        Start a new acquisition session.
+        Start acquisition in an existing prepared session.
         """
-
         if self.running:
-
             self.status.emit(
                 "Acquisition is already running"
             )
+            return
 
+        session_directory = Path(
+            session_directory
+        )
+
+        if not (
+            session_directory
+            / "manifest.json"
+        ).is_file():
+            self.error.emit(
+                "Selected session has no manifest.json. "
+                "Create/select an experiment before starting acquisition."
+            )
             return
 
         self._thread = QThread()
 
         self._worker = AcquisitionWorker(
-            session_root=session_root
+            session_directory=session_directory
         )
 
         self._worker.moveToThread(
             self._thread
         )
 
-        # -------------------------------------------------
-        # Start worker
-        # -------------------------------------------------
-
         self._thread.started.connect(
             self._worker.run
         )
 
-        # -------------------------------------------------
-        # Forward worker signals
-        # -------------------------------------------------
-
         self._worker.started.connect(
             self.acquisition_started
         )
-
         self._worker.stopped.connect(
             self.acquisition_stopped
         )
-
         self._worker.probe_states.connect(
             self.probe_states
         )
-
         self._worker.status.connect(
             self.status
         )
-
         self._worker.error.connect(
             self.error
         )
 
-        # -------------------------------------------------
-        # Thread cleanup
-        # -------------------------------------------------
-
         self._worker.finished.connect(
             self._thread.quit
         )
-
         self._worker.finished.connect(
             self._worker.deleteLater
         )
-
         self._thread.finished.connect(
             self._thread.deleteLater
         )
-
         self._thread.finished.connect(
             self._cleanup
         )
 
-        # -------------------------------------------------
-        # Start QThread
-        # -------------------------------------------------
-
         self._thread.start()
 
     def stop(self) -> None:
-        """
-        Request a graceful acquisition shutdown.
-        """
-
         if self._worker is None:
-
             self.status.emit(
                 "Acquisition is not running"
             )
-
             return
 
         self.status.emit(
             "Stop requested"
         )
-
         self._worker.request_stop()
 
     def _cleanup(self) -> None:
-        """
-        Clear references after the worker thread exits.
-        """
-
         self._worker = None
         self._thread = None
